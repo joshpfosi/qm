@@ -301,13 +301,10 @@ def solvePetrick(epis, uncovered, coveredBy, numVars):
 # Notes: All minterms which are not in ones or dcs are assumed zeros
 # This interface is deliberately similar to the qm library for testing purposes
 # -----------------------------------------------------------------------------
-def minimize(ones=[], dc=[]):
+def minimize(ones=[], dc=[], numVars=0):
     if len(ones) < 1:
-        sys.stderr.write("ones array too short (ones=%s)\n" % ones)
+        sys.stderr.write("ones array too short (ones=%s) or numVars too low (numVars=%s)\n" % (ones, numVars))
         return {}
-
-    # round up the log_2 of the highest minterm or dont care
-    numVars   = int(ceil(log(max(ones+dc) + 1, 2)))
 
     # represent all minterms as binary strings padded w/ leading 0s
     zeroCubes = [bin(i)[2:].zfill(numVars) for i in ones+dc]
@@ -319,6 +316,7 @@ def minimize(ones=[], dc=[]):
     # -------------------------------------------------------------------------
     # Form close cover
     # -------------------------------------------------------------------------
+
     # everything starts uncovered
     uncovered = list(ones)
     epis      = []
@@ -404,28 +402,47 @@ def minimize(ones=[], dc=[]):
 if __name__ == "__main__":
 
     for func in sys.stdin:
-        (ones, dc) = parse_func(func)
+        (ones, dcs) = parse_func(func)
+        numvars     = int(ceil(log(max(ones+dcs) + 1, 2)))
 
-        # calculate both
-        lib_res       = qm.qm(ones=ones, dc=dc)
-        minimizations = minimize(ones=ones, dc=dc)
-        # returns an array of minimizations if multiple same cost terms exist
 
-        # ensure order doesn't matter
-        lib_res.sort()
-        for minimization in minimizations: minimization.sort()
+        if True:
+            minimization = minimize(ones, dcs, numvars)
+            lib_res      = qm.qm(ones=ones, dc=dcs)
 
-        if any([result == lib_res for result in minimizations]):
-            #print minimizations[0]
-            sys.stdout.write(".")
+            # ensure order doesn't matter
+            lib_res.sort()
+            for mini in minimization: mini.sort()
+
+            if any([result == lib_res for result in minimization]):
+                #print minimization[0]
+                #nice_print(minimization[0])
+                sys.stdout.write(".")
+                sys.stdout.flush()
+            else:
+                #print "Results differed"
+                #minimization[0].sort
+                #print "minimization=%s" % minimization
+                #nice_print(minimization[0])
+                #lib_res.sort
+                #print "lib_res=%s" % lib_res
+                #nice_print(lib_res)
+                sys.stdout.write("F")
+                sys.stdout.write(": Failed on func = |%s|" % func)
         else:
-            #print "Results differed"
-            #minimizations[0].sort
-            #print "minimizations=%s" % minimizations
-            #lib_res.sort
-            #print "lib_res=%s" % lib_res
-            sys.stdout.write("F")
-            sys.stdout.write(": Failed on func = |%s|" % func)
-    sys.stdout.write("\n")
+            # ---------------------------------------------------------------------
+            # Compute SOP
+            # ---------------------------------------------------------------------
+            minimization = minimize(ones, dcs, numvars)
+            nice_print(minimization, numvars, sop=True)
+
+            zeros = [maxterm for maxterm in range(2**numvars) if maxterm not in ones]
+            dcs   = [dc for dc in dcs if dc not in zeros]
+
+            # ---------------------------------------------------------------------
+            # Compute POS
+            # ---------------------------------------------------------------------
+            minimization = minimize(zeros, dcs, numvars)
+            nice_print(minimization, numvars, sop=False)
 
 
