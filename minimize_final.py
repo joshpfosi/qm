@@ -243,7 +243,7 @@ def solvePetrick(epis, uncovered, coveredBy, numVars):
     for i, cost in enumerate(costs):
         if cost == minCost: minCostTerm = closeCovers[i]
 
-    epis += [minCostTerm]
+    epis += minCostTerm
     return [mintermsToLiterals(pi, numVars) for pi in epis]
 
 # -----------------------------------------------------------------------------
