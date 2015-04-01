@@ -1,5 +1,6 @@
 # Failures
 
+#m(0, 11, 14, 1, 5, 10, 12)+d(7, 6, 16)
 #m(0,1,3,4,7,11,12,15,16,17,20,28)
 #m(19, 14, 4, 16, 6, 18, 7, 13, 10, 17, 5, 0)+d(3, 9, 15)
 #m(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
@@ -11,7 +12,7 @@
 if __name__ == "__main__":
     from minimize_final import *
     from numpy import *
-
+    from math import *
     # generate lots of test input
 
     numFuncs = 10 # generate numFuncs inputs at once
@@ -36,20 +37,24 @@ if __name__ == "__main__":
         for elem in a2:
             if elem not in dcs and elem not in ones: dcs.append(elem)
 
+        ones.sort
+        dcs.sort
+
         if len(ones) != 0:
             if len(dcs) != 0:
                 funcs += ["m({0})+d({1})".format(str(ones)[1:-1], str(dcs)[1:-1])]
             else: 
                 funcs += ["m({0})".format(str(ones)[1:-1])]
 
-    succ = open('big_test.txt', 'a')
-    fail = open('big_fail.txt', 'a')
+    #succ = open('big_test.txt', 'a')
+    #fail = open('big_fail.txt', 'a')
     for func in funcs:
-        (ones, dc) = parse_func(func)
+        (ones, dcs) = parse_func(func)
+        numvars     = int(ceil(log(max(ones+dcs) + 1, 2)))
 
         # calculate both
-        lib_res       = qm.qm(ones=ones, dc=dc)
-        minimizations = minimize(ones=ones, dc=dc)
+        minimizations = minimize(ones, dcs, numvars)
+        lib_res       = qm.qm(ones=ones, dc=dcs)
         # returns an array of minimizations if multiple same cost terms exist
 
         # ensure order doesn't matter
@@ -57,18 +62,17 @@ if __name__ == "__main__":
         for minimization in minimizations: minimization.sort()
 
         if any([result == lib_res for result in minimizations]):
-            succ.write("%s\n" % func)
+            #succ.write("%s\n" % func)
             #print minimizations[0]
             #nice_print(minimizations[0])
             sys.stdout.write(".")
         else:
-            fail.write("%s\n" % func)
-            #print "Results differed"
-            #print "minimizations=%s" % minimizations
-            #print "lib_res=%s" % lib_res
-            sys.stdout.write("F")
-            #sys.stdout.write(": Failed on func = |%s|" % func)
+            #fail.write("%s\n" % func)
+            print "Results differed for func=%s" % func
+            print "minimizations=%s" % minimizations
+            print "lib_res=%s" % lib_res
+            #sys.stdout.write("\nF")
+            #sys.stdout.write(": Failed on func = |%s|\n" % func)
 
-    print "\n"
 
 
