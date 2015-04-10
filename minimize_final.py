@@ -1,5 +1,6 @@
 # Python library to compute the SOP minimization of a given boolean
 # function
+# Usage: python minimize_final.py < inputfile
 
 __author__ = "Josh Pfosi"
 
@@ -9,7 +10,6 @@ import re
 from math         import *
 from sympy        import *
 from numpy.random import randint
-from numpy        import unique
 from itertools    import product
 
 # -----------------------------------------------------------------------------
@@ -42,20 +42,16 @@ def parseFunc(func):
 #                    e.g. ['011X', '000X']
 #          sop     - boolean to toggle SOP or POS format for printing
 #          numVars - number of variables in original fxn
-# Returns: nothing
-#
-# Notes: Prints in SOP or POS form
+# Returns: string w/ minimization in sop or pos format
 # -----------------------------------------------------------------------------
 
 def nicePrint(result=[], numVars=0, sop=True):
     if numVars < 1 or numVars > 10: 
         sys.stderr.write("Cannot handle more than 10 variables or less than 1 variable\n")
-        return
+        return ''
 
     # hard code special case where all minterms are covered
-    if len(result) == 1 and len(result[0].replace("X", "")) == 0:
-        print "=1"
-        return
+    if len(result) == 1 and len(result[0].replace("X", "")) == 0: return "1"
 
     variables = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
     eq = ''
@@ -83,7 +79,7 @@ def nicePrint(result=[], numVars=0, sop=True):
 
     if sop: eq = eq[:-1]
 
-    print "=%s" % eq
+    return eq
 
 # -----------------------------------------------------------------------------
 # combine
@@ -331,23 +327,22 @@ def minimize(ones=[], dc=[], numVars=0):
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-
     for func in sys.stdin:
-        (ones, dcs) = parseFunc(func)
-        numvars     = int(ceil(log(max(ones+dcs) + 1, 2)))
-
         # ---------------------------------------------------------------------
         # Compute SOP
         # ---------------------------------------------------------------------
-        minimization = minimize(ones, dcs, numvars)
-        nicePrint(minimization, numvars, sop=True)
+        (ones, dcs) = parseFunc(func)
+        numvars     = int(ceil(log(max(ones+dcs) + 1, 2)))
 
-        zeros = [maxterm for maxterm in range(2**numvars) if maxterm not in ones]
-        dcs   = [dc for dc in dcs if dc not in zeros]
+        minimization = minimize(ones, dcs, numvars)
+        print "=%s" % nicePrint(minimization, numvars, sop=True)
+
 
         # ---------------------------------------------------------------------
         # Compute POS
         # ---------------------------------------------------------------------
+        zeros = [maxterm for maxterm in range(2**numvars) if maxterm not in ones and maxterm not in dcs]
+        
         minimization = minimize(zeros, dcs, numvars)
-        nicePrint(minimization, numvars, sop=False)
+        print "=%s" % nicePrint(minimization, numvars, sop=False)
 

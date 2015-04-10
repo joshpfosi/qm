@@ -343,10 +343,9 @@ if __name__ == "__main__":
             for mini in minimization: mini.sort()
 
             if any([result == lib_res for result in minimization]):
-                #print minimization[0]
-                #nice_print(minimization[0])
-                sys.stdout.write(".")
-                sys.stdout.flush()
+                nice_print(minimization[0], numvars, True)
+                #sys.stdout.write(".")
+                #sys.stdout.flush()
             else:
                 #print "Results differed"
                 #minimization[0].sort
